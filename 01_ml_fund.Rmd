@@ -1,0 +1,162 @@
+---
+title: "01 Machine Learning Fundamentals"
+author: "Sourabh Kulkarni"
+date: "2022-06-04"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    collapsed: false
+    number_sections: true
+    toc_depth: 3
+    #code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
+```
+
+```{r}
+# Import libraries
+library(tidyverse)
+library(tidyquant)
+library(broom)
+library(umap)
+```
+
+```{r}
+# STOCK PRICES
+sp_500_prices_tbl <- read_rds("./raw_data/sp_500_prices_tbl.rds")
+sp_500_prices_tbl
+
+# SECTOR INFORMATION
+sp_500_index_tbl <- read_rds("./raw_data/sp_500_index_tbl.rds")
+sp_500_index_tbl
+```
+
+```{r}
+# Step 1 - Convert stock prices to a standardized format (daily returns)
+sp_500_prices_tbl %>% glimpse()
+
+sp_500_daily_returns_tbl <- sp_500_prices_tbl %>% 
+    select(symbol, date, adjusted) %>%          
+    filter(date >= "2018-01-01") %>%            
+    group_by(symbol) %>% 
+    mutate(adj_lag = lag(adjusted)) %>% 
+    filter(!is.na(adj_lag)) %>% 
+    mutate(diff = adjusted - adj_lag,
+           pct_return = diff / adj_lag) %>% 
+    select(symbol, date, pct_return)
+
+sp_500_daily_returns_tbl
+```
+
+
+```{r}
+# Step 2 - Convert to User-Item Format
+sp_500_daily_returns_tbl <- read_rds("./raw_data/sp_500_daily_returns_tbl.rds")
+sp_500_daily_returns_tbl
+```
+```{r}
+# Step 3 - Perform K-Means Clustering
+stock_date_matrix_tbl <- read_rds("./raw_data/stock_date_matrix_tbl.rds")
+
+# Create kmeans_obj for 4 centers
+kmeans_obj <- stock_date_matrix_tbl %>% 
+    select(-symbol) %>% 
+    kmeans(centers = 4, nstart = 20)
+kmeans_obj %>% glance()
+```
+
+
+```{r}
+# Step 4 - Find the optimal value of K
+kmeans_mapper <- function(center = 3) {
+    stock_date_matrix_tbl %>%
+        select(-symbol) %>%
+        kmeans(centers = center, nstart = 20)
+}
+```
+
+```{r}
+# Use purrr to map
+k_means_mapped_tbl <- tibble(centers = 1:30) %>% 
+    mutate(k_means = centers %>% map(kmeans_mapper),
+           glance = k_means %>% map(glance))
+
+k_means_mapped_tbl 
+```
+
+```{r}
+# Visualize Scree Plot
+k_means_mapped_tbl %>% 
+    unnest(glance) %>% 
+    ggplot(aes(x = centers, y = tot.withinss)) +
+    geom_point() +
+    geom_line()
+```
+
+
+```{r}
+# Step 5 - Apply UMAP
+k_means_mapped_tbl <- read_rds("./raw_data/k_means_mapped_tbl.rds")
+# Apply UMAP
+umap_results <- stock_date_matrix_tbl %>% 
+    select(-symbol) %>% 
+    umap() 
+umap_results 
+```
+
+```{r}
+# Convert umap results to tibble with symbols
+umap_results_tbl <- umap_results$layout %>%
+    as_tibble() %>%
+    bind_cols(stock_date_matrix_tbl %>% select(symbol))
+ umap_results_tbl
+```
+
+```{r}
+# Visualize UMAP results
+umap_results_tbl %>% 
+    ggplot(aes(V1, V2)) +
+    geom_point(alpha = 0.5) +
+    theme_tq() +
+    labs(title = "UMAP Projection")
+```
+
+
+```{r}
+# Step 6 - Combine K-Means and UMAP
+k_means_mapped_tbl <- read_rds("./raw_data/k_means_mapped_tbl.rds")
+umap_results_tbl   <- read_rds("./raw_data/umap_results_tbl.rds")
+```
+
+```{r}
+# Get the k_means_obj from the 10th center
+k_means_obj <- k_means_mapped_tbl %>% 
+    filter(centers == 10) %>% 
+    pull(k_means) %>% 
+    pluck(1)
+```
+
+```{r}
+# Use your dplyr & broom skills to combine the k_means_obj with the umap_results_tbl
+umap_kmeans_results_tbl <- k_means_obj %>%
+    augment(stock_date_matrix_tbl) %>%
+    select(symbol, .cluster) %>%
+    left_join(umap_results_tbl,
+              by = "symbol") %>%
+    left_join(sp_500_index_tbl %>% select(symbol, company, sector),
+              by = "symbol")
+ umap_kmeans_results_tbl 
+```
+
+```{r}
+# Visualize the combined K-Means and UMAP results
+umap_kmeans_results_tbl %>% 
+    ggplot(aes(V1, V2, color = .cluster)) +
+    geom_point(alpha = 0.5) +
+    theme_tq() +
+    scale_color_tq()
+```

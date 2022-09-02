@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2022-06-04" />
+
+<title>02 Supervised ML</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">MyLabJournal</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Index</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Journal
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="01_ml_fund.html">01 Machine Learning Fundamentals</a>
+    </li>
+    <li>
+      <a href="02_ml_sup.html">02 Supervised ML</a>
+    </li>
+    <li>
+      <a href="03_ml_aut.html">03 Automated Machine Learning with H20</a>
+    </li>
+    <li>
+      <a href="04_perf_meas.html">04 Performance Measures</a>
+    </li>
+    <li>
+      <a href="05_lime.html">05 LIME</a>
+    </li>
+    <li>
+      <a href="06_dl.html">06 Deep Learning</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="07_class_notes.html">Class notes</a>
+</li>
+<li>
+  <a href="08_links.html">Links</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">02 Supervised ML</h1>
+<h4 class="date">2022-06-04</h4>
+
+</div>
+
+
+<pre class="r"><code># Standard
+library(tidyverse)
+
+# Modeling
+library(parsnip)
+library(tidymodels)
+library(rstanarm)
+library(broom)
+
+
+# Preprocessing &amp; Sampling
+library(recipes)
+library(rsample)
+
+# Modeling Error Metrics
+library(yardstick)
+
+# Plotting Decision Trees
+library(rpart)</code></pre>
+<pre class="r"><code># Modeling ----------------------------------------------------------------
+# Read and visualize data
+bike_orderlines_tbl &lt;- readRDS(&quot;./raw_data/bike_orderlines.rds&quot;)
+glimpse(bike_orderlines_tbl)</code></pre>
+<pre><code>## Rows: 15,644
+## Columns: 18
+## $ order_id       &lt;dbl&gt; 1, 1, 2, 2, 3, 3, 3, 3, 3, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7…
+## $ order_line     &lt;dbl&gt; 1, 2, 1, 2, 1, 2, 3, 4, 5, 1, 1, 2, 3, 4, 1, 2, 3, 4, 1…
+## $ order_date     &lt;dttm&gt; 2015-01-07, 2015-01-07, 2015-01-10, 2015-01-10, 2015-0…
+## $ model          &lt;chr&gt; &quot;Spectral CF 7 WMN&quot;, &quot;Ultimate CF SLX Disc 8.0 ETAP&quot;, &quot;…
+## $ model_year     &lt;dbl&gt; 2021, 2020, 2021, 2019, 2020, 2020, 2020, 2021, 2020, 2…
+## $ category_1     &lt;chr&gt; &quot;Mountain&quot;, &quot;Road&quot;, &quot;Mountain&quot;, &quot;Road&quot;, &quot;Mountain&quot;, &quot;Hy…
+## $ category_2     &lt;chr&gt; &quot;Trail&quot;, &quot;Race&quot;, &quot;Trail&quot;, &quot;Triathlon Bike&quot;, &quot;Dirt Jump&quot;…
+## $ category_3     &lt;chr&gt; &quot;Spectral&quot;, &quot;Ultimate&quot;, &quot;Neuron&quot;, &quot;Speedmax&quot;, &quot;Stitched…
+## $ price          &lt;dbl&gt; 3119, 5359, 2729, 1749, 1219, 1359, 2529, 1559, 3899, 6…
+## $ quantity       &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1…
+## $ total_price    &lt;dbl&gt; 3119, 5359, 2729, 1749, 1219, 1359, 2529, 1559, 3899, 6…
+## $ frame_material &lt;chr&gt; &quot;carbon&quot;, &quot;carbon&quot;, &quot;carbon&quot;, &quot;carbon&quot;, &quot;aluminium&quot;, &quot;c…
+## $ weight         &lt;dbl&gt; 13.80, 7.44, 14.06, 8.80, 11.50, 8.80, 8.20, 8.85, 14.4…
+## $ url            &lt;chr&gt; &quot;https://www.canyon.com/en-de/mountain-bikes/trail-bike…
+## $ bikeshop       &lt;chr&gt; &quot;AlexandeRad&quot;, &quot;AlexandeRad&quot;, &quot;WITT-RAD&quot;, &quot;WITT-RAD&quot;, &quot;…
+## $ location       &lt;chr&gt; &quot;Hamburg, Hamburg&quot;, &quot;Hamburg, Hamburg&quot;, &quot;Bremen, Bremen…
+## $ lat            &lt;dbl&gt; 53.57532, 53.57532, 53.07379, 53.07379, 48.78234, 48.78…
+## $ lng            &lt;dbl&gt; 10.015340, 10.015340, 8.826754, 8.826754, 9.180819, 9.1…</code></pre>
+<pre class="r"><code>model_sales_tbl &lt;- bike_orderlines_tbl %&gt;%
+    select(total_price, model, category_2, frame_material) %&gt;%
+    group_by(model, category_2, frame_material) %&gt;%
+    summarise(total_sales = sum(total_price)) %&gt;%
+    ungroup() %&gt;%
+    arrange(desc(total_sales))
+
+model_sales_tbl %&gt;% 
+    mutate(category_2 = as_factor(category_2) %&gt;% 
+    fct_reorder(total_sales, .fun = max) %&gt;% fct_rev()) %&gt;%
+    ggplot(aes(frame_material, total_sales)) +
+    geom_violin() +
+    geom_jitter(width = 0.1, alpha = 0.5, color = &quot;#2c3e50&quot;) +
+    #coord_flip() +
+    facet_wrap(~ category_2) +
+    scale_y_continuous(labels = scales::dollar_format(scale = 1e-6, suffix = &quot;M&quot;, accuracy = 0.1)) +
+    tidyquant::theme_tq() +
+    labs(
+        title = &quot;Total Sales for Each Model&quot;,
+        x = &quot;Frame Material&quot;, y = &quot;Revenue&quot;
+    )</code></pre>
+<p><img src="02_ml_sup_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<pre class="r"><code># Preprocess data for fitting into a model
+bike_features_tbl &lt;- readRDS(&quot;./raw_data/bike_features_tbl.rds&quot;)
+glimpse(bike_features_tbl)</code></pre>
+<pre><code>## Rows: 231
+## Columns: 67
+## $ bike_id                     &lt;dbl&gt; 2875, 2873, 2874, 2876, 2877, 2225, 2091, …
+## $ model                       &lt;chr&gt; &quot;Aeroad CF SL Disc 8.0 Di2&quot;, &quot;Aeroad CF SL…
+## $ model_year                  &lt;dbl&gt; 2020, 2020, 2020, 2020, 2020, 2019, 2019, …
+## $ frame_material              &lt;chr&gt; &quot;carbon&quot;, &quot;carbon&quot;, &quot;carbon&quot;, &quot;carbon&quot;, &quot;c…
+## $ weight                      &lt;dbl&gt; 7.60, 7.27, 7.10, 7.73, 7.83, 6.80, 6.80, …
+## $ price                       &lt;dbl&gt; 4579, 6919, 6429, 5069, 3609, 6139, 5359, …
+## $ category_1                  &lt;chr&gt; &quot;Road&quot;, &quot;Road&quot;, &quot;Road&quot;, &quot;Road&quot;, &quot;Road&quot;, &quot;R…
+## $ category_2                  &lt;chr&gt; &quot;Race&quot;, &quot;Race&quot;, &quot;Race&quot;, &quot;Race&quot;, &quot;Race&quot;, &quot;R…
+## $ category_3                  &lt;chr&gt; &quot;Aeroad&quot;, &quot;Aeroad&quot;, &quot;Aeroad&quot;, &quot;Aeroad&quot;, &quot;A…
+## $ gender                      &lt;chr&gt; &quot;unisex&quot;, &quot;unisex&quot;, &quot;unisex&quot;, &quot;unisex&quot;, &quot;u…
+## $ url                         &lt;chr&gt; &quot;https://www.canyon.com/en-de/road-bikes/r…
+## $ Frame                       &lt;chr&gt; &quot;Canyon Aeroad CF SL Disc&quot;, &quot;Canyon Aeroad…
+## $ Fork                        &lt;chr&gt; &quot;Canyon FK0041 CF SLX Disc&quot;, &quot;Canyon FK004…
+## $ `Rear Derailleur`           &lt;chr&gt; &quot;Shimano Ultegra Di2 R8050 SS&quot;, &quot;SRAM RED …
+## $ `Front Derailleur`          &lt;chr&gt; &quot;Shimano Ultegra Di2 R8050&quot;, &quot;SRAM RED eTa…
+## $ Cassette                    &lt;chr&gt; &quot;Shimano Ultegra R8000, 11-speed, 11-28T&quot;,…
+## $ Crank                       &lt;chr&gt; &quot;Shimano Ultegra R8000&quot;, &quot;SRAM RED D1&quot;, &quot;S…
+## $ `Bottom bracket`            &lt;chr&gt; &quot;Shimano Pressfit BB72&quot;, &quot;SRAM Pressfit RE…
+## $ `Thru Axle`                 &lt;chr&gt; &quot;Canyon Thru Axle&quot;, &quot;Canyon Thru Axle&quot;, &quot;C…
+## $ Cockpit                     &lt;chr&gt; &quot;Canyon H36 Aerocockpit CF&quot;, &quot;Canyon H36 A…
+## $ Saddle                      &lt;chr&gt; &quot;Selle Italia SLR&quot;, &quot;Selle Italia SLR&quot;, &quot;S…
+## $ Seatpost                    &lt;chr&gt; &quot;Canyon S27 Aero VCLS CF&quot;, &quot;Canyon S27 Aer…
+## $ Pedals                      &lt;chr&gt; &quot;None included&quot;, &quot;None included&quot;, &quot;None in…
+## $ `Derailleur hanger`         &lt;chr&gt; &quot;Shop Derailleur Hanger GP0211-01&quot;, &quot;Shop …
+## $ Battery                     &lt;chr&gt; &quot;&quot;, &quot;SRAM eTap Powerpack&quot;, &quot;&quot;, &quot;SRAM eTap …
+## $ Brake                       &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Shift Lever`               &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;Shimano Di2 Remot…
+## $ Chain                       &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;Shimano CN-HG901 …
+## $ Stem                        &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;Canyon V13&quot;, …
+## $ Handlebar                   &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;Canyon H16 Ae…
+## $ Headset                     &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ Motor                       &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Battery Charger`           &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Flat Pedals`               &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ Chainguard                  &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Aero Bar`                  &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Brake Lever / Master`      &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Wheel Tire System`         &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Suspension Fork`           &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Disc Brake`                &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ Grips                       &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ Chainring                   &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ Display                     &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ Modeswitch                  &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Rear Shock`                &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ Light                       &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ Fender                      &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Bike Racks`                &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Brake 1`                   &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;SRAM S-900 Direct Mou…
+## $ `Brake 2`                   &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;SRAM S-900 Direct Mou…
+## $ `Shift-/ Brake Lever 1`     &lt;chr&gt; &quot;Shimano Ultegra Di2 R8070, 11-speed&quot;, &quot;SR…
+## $ `Shift-/ Brake Lever 2`     &lt;chr&gt; &quot;Shimano Ultegra Di2 R8070, 11-speed&quot;, &quot;SR…
+## $ `Wheel 1`                   &lt;chr&gt; &quot;DT Swiss ARC 1400 Dicut&quot;, &quot;DT Swiss ARC 1…
+## $ `Wheel 2`                   &lt;chr&gt; &quot;DT Swiss ARC 1400 Dicut&quot;, &quot;DT Swiss ARC 1…
+## $ `Tyre 1`                    &lt;chr&gt; &quot;Continental Grand Prix 5000 / Attack  23 …
+## $ `Tyre 2`                    &lt;chr&gt; &quot;Continental Grand Prix 5000, 25 mm&quot;, &quot;Con…
+## $ `Handlebar Tape 1`          &lt;chr&gt; &quot;Canyon Ergospeed Gel&quot;, &quot;Canyon Ergospeed …
+## $ `Handlebar Tape 2`          &lt;chr&gt; &quot;Canyon bar-end plug&quot;, &quot;Canyon bar-end plu…
+## $ `Manuals and Accessories 1` &lt;chr&gt; &quot;Canyon tool case&quot;, &quot;Canyon tool case&quot;, &quot;C…
+## $ `Manuals and Accessories 2` &lt;chr&gt; &quot;DT Swiss warranty &amp; intended use manual&quot;,…
+## $ `Manuals and Accessories 3` &lt;chr&gt; &quot;Canyon starter box&quot;, &quot;Canyon starter box&quot;…
+## $ `Manuals and Accessories 4` &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;BAG R…
+## $ `Manuals and Accessories 5` &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Manuals and Accessories 6` &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Manuals and Accessories 7` &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Manuals and Accessories 8` &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;…
+## $ `Brake Rotor`               &lt;list&gt; &quot;Shimano RT800&quot;, &quot;SRAM Centerline X&quot;, &quot;Sh…</code></pre>
+<pre class="r"><code>bike_features_tbl &lt;- bike_features_tbl %&gt;% 
+    select(frame_material:gender, `Rear Derailleur`, `Shift Lever`) %&gt;% 
+    mutate(
+      `shimano dura-ace`        = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano dura-ace &quot;) %&gt;% as.numeric(),
+      `shimano ultegra`         = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano ultegra &quot;) %&gt;% as.numeric(),
+      `shimano 105`             = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano 105 &quot;) %&gt;% as.numeric(),
+      `shimano tiagra`          = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano tiagra &quot;) %&gt;% as.numeric(),
+      `Shimano sora`            = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano sora&quot;) %&gt;% as.numeric(),
+      `shimano deore`           = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano deore(?! xt)&quot;) %&gt;% as.numeric(),
+      `shimano slx`             = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano slx&quot;) %&gt;% as.numeric(),
+      `shimano grx`             = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano grx&quot;) %&gt;% as.numeric(),
+      `Shimano xt`              = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano deore xt |shimano xt &quot;) %&gt;% as.numeric(),
+      `Shimano xtr`             = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano xtr&quot;) %&gt;% as.numeric(),
+      `Shimano saint`           = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano saint&quot;) %&gt;% as.numeric(),
+      `SRAM red`                = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;sram red&quot;) %&gt;% as.numeric(),
+      `SRAM force`              = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;sram force&quot;) %&gt;% as.numeric(),
+      `SRAM rival`              = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;sram rival&quot;) %&gt;% as.numeric(),
+      `SRAM apex`               = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;sram apex&quot;) %&gt;% as.numeric(),
+      `SRAM xx1`                = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;sram xx1&quot;) %&gt;% as.numeric(),
+      `SRAM x01`                = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;sram x01|sram xo1&quot;) %&gt;% as.numeric(),
+      `SRAM gx`                 = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;sram gx&quot;) %&gt;% as.numeric(),
+      `SRAM nx`                 = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;sram nx&quot;) %&gt;% as.numeric(),
+      `SRAM sx`                 = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;sram sx&quot;) %&gt;% as.numeric(),
+      `SRAM sx`                 = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;sram sx&quot;) %&gt;% as.numeric(),
+      `Campagnolo potenza`      = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;campagnolo potenza&quot;) %&gt;% as.numeric(),
+      `Campagnolo super record` = `Rear Derailleur` %&gt;% str_to_lower() %&gt;% str_detect(&quot;campagnolo super record&quot;) %&gt;% as.numeric(),
+      `shimano nexus`           = `Shift Lever`     %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano nexus&quot;) %&gt;% as.numeric(),
+      `shimano alfine`          = `Shift Lever`     %&gt;% str_to_lower() %&gt;% str_detect(&quot;shimano alfine&quot;) %&gt;% as.numeric()
+    ) %&gt;% 
+  # Remove original columns  
+  select(-c(`Rear Derailleur`, `Shift Lever`)) %&gt;% 
+  # Set all NAs to 0
+  mutate_if(is.numeric, ~replace(., is.na(.), 0))</code></pre>
+<pre class="r"><code># Test train splitting
+bike_features_tbl &lt;- bike_features_tbl %&gt;% 
+  mutate(id = row_number()) %&gt;% 
+  mutate(frame_material = factor(frame_material)) %&gt;%
+  select(id, everything()) 
+
+
+bike_features_tbl %&gt;% distinct(category_2)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["category_2"],"name":[1],"type":["chr"],"align":["left"]}],"data":[{"1":"Race"},{"1":"Endurance"},{"1":"E-Road"},{"1":"Cyclocross"},{"1":"Triathlon Bike"},{"1":"Fat Bikes"},{"1":"Cross-Country"},{"1":"Adventure"},{"1":"All-Road"},{"1":"E-Gravel"},{"1":"Trail"},{"1":"E-Mountain"},{"1":"Downhill"},{"1":"Dirt Jump"},{"1":"Enduro"},{"1":"E-City"},{"1":"E-Trekking"},{"1":"E-Fitness"},{"1":"City"},{"1":"Touring"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>set.seed(seed = 1113)
+split_obj &lt;- rsample::initial_split(bike_features_tbl, prop   = 0.80, 
+                                    strata = &quot;category_2&quot;)
+
+split_obj %&gt;% training() %&gt;% distinct(category_2)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["category_2"],"name":[1],"type":["chr"],"align":["left"]}],"data":[{"1":"Race"},{"1":"Endurance"},{"1":"Cyclocross"},{"1":"Triathlon Bike"},{"1":"Fat Bikes"},{"1":"Cross-Country"},{"1":"Adventure"},{"1":"All-Road"},{"1":"E-Gravel"},{"1":"E-Mountain"},{"1":"Downhill"},{"1":"Dirt Jump"},{"1":"Enduro"},{"1":"E-City"},{"1":"E-Trekking"},{"1":"E-Fitness"},{"1":"City"},{"1":"Touring"},{"1":"Trail"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>split_obj %&gt;% testing() %&gt;% distinct(category_2)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["category_2"],"name":[1],"type":["chr"],"align":["left"]}],"data":[{"1":"Race"},{"1":"Endurance"},{"1":"E-Road"},{"1":"Cyclocross"},{"1":"Triathlon Bike"},{"1":"Cross-Country"},{"1":"All-Road"},{"1":"Trail"},{"1":"E-Mountain"},{"1":"Dirt Jump"},{"1":"Enduro"},{"1":"E-City"},{"1":"E-Fitness"},{"1":"City"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>train_tbl &lt;- training(split_obj)
+test_tbl  &lt;- testing(split_obj)
+
+train_data &lt;- train_tbl %&gt;% set_names(str_replace_all(names(train_tbl), &quot; |-&quot;, &quot;_&quot;))
+test_data  &lt;- test_tbl  %&gt;% set_names(str_replace_all(names(test_tbl), &quot; |-&quot;, &quot;_&quot;))</code></pre>
+<pre class="r"><code># Create recipe and fit the model                                                                              
+bike_recipe &lt;- recipe(frame_material ~ ., data = train_data) %&gt;% 
+  step_dummy(all_nominal(), -all_outcomes()) %&gt;% 
+  step_zv(all_predictors()) 
+
+d &lt;- summary(bike_recipe)
+lr_mod &lt;- logistic_reg() %&gt;% 
+  set_engine(&quot;glm&quot;)
+lr_mod</code></pre>
+<pre><code>## Logistic Regression Model Specification (classification)
+## 
+## Computational engine: glm</code></pre>
+<pre class="r"><code>bike_workflow &lt;- workflow() %&gt;% 
+  add_model(lr_mod) %&gt;% 
+  add_recipe(bike_recipe)
+bike_workflow</code></pre>
+<pre><code>## ══ Workflow ════════════════════════════════════════════════════════════════════
+## Preprocessor: Recipe
+## Model: logistic_reg()
+## 
+## ── Preprocessor ────────────────────────────────────────────────────────────────
+## 2 Recipe Steps
+## 
+## • step_dummy()
+## • step_zv()
+## 
+## ── Model ───────────────────────────────────────────────────────────────────────
+## Logistic Regression Model Specification (classification)
+## 
+## Computational engine: glm</code></pre>
+<pre class="r"><code>bike_fit &lt;- bike_workflow %&gt;% 
+  fit(data = train_data)
+bike_fit</code></pre>
+<pre><code>## ══ Workflow [trained] ══════════════════════════════════════════════════════════
+## Preprocessor: Recipe
+## Model: logistic_reg()
+## 
+## ── Preprocessor ────────────────────────────────────────────────────────────────
+## 2 Recipe Steps
+## 
+## • step_dummy()
+## • step_zv()
+## 
+## ── Model ───────────────────────────────────────────────────────────────────────
+## 
+## Call:  stats::glm(formula = ..y ~ ., family = stats::binomial, data = data)
+## 
+## Coefficients:
+##                (Intercept)                          id  
+##                 -29.023317                    0.134508  
+##                     weight                       price  
+##                  -1.137722                    0.001881  
+##           shimano_dura_ace             shimano_ultegra  
+##                  19.565947                    2.396064  
+##                shimano_105              shimano_tiagra  
+##                   2.506643                  -17.941008  
+##              shimano_deore                 shimano_slx  
+##                   1.922918                  -39.250676  
+##                shimano_grx                  Shimano_xt  
+##                   1.356696                   -0.277780  
+##              Shimano_saint                    SRAM_red  
+##                  67.796756                   10.917273  
+##                 SRAM_force                  SRAM_rival  
+##                  18.318718                    5.422866  
+##                  SRAM_apex                    SRAM_xx1  
+##                 -37.243665                  -39.864640  
+##                   SRAM_x01                     SRAM_gx  
+##                  20.279129                    2.118640  
+##                    SRAM_nx                     SRAM_sx  
+##                 -35.956274                  -18.694724  
+##    Campagnolo_super_record               shimano_nexus  
+##                  -6.596237                  -40.019174  
+##             shimano_alfine           category_1_Gravel  
+##                 -41.149188                   74.722516  
+##   category_1_Hybrid...City         category_1_Mountain  
+##                 -11.499324                   36.065532  
+##            category_1_Road         category_2_All.Road  
+##                  46.235831                  -16.622055  
+##            category_2_City    category_2_Cross.Country  
+##                  14.836869                   40.166847  
+##      category_2_Cyclocross        category_2_Dirt.Jump  
+##                  -0.133794                  -42.225239  
+##        category_2_Downhill           category_2_E.City  
+##                 -63.055983                   40.810242  
+##       category_2_E.Fitness         category_2_E.Gravel  
+##                 -10.635790                   45.701282  
+##      category_2_E.Mountain       category_2_E.Trekking  
+##                  44.826708                          NA  
+##       category_2_Endurance           category_2_Enduro  
+##                 -16.558142                   -1.740131  
+##       category_2_Fat.Bikes             category_2_Race  
+##                  51.375262                    2.301865  
+##         category_2_Touring            category_2_Trail  
+##                         NA                          NA  
+## 
+## ...
+## and 32 more lines.</code></pre>
+<pre class="r"><code>bike_fit %&gt;% pull_workflow_fit() %&gt;% tidy()</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["term"],"name":[1],"type":["chr"],"align":["left"]},{"label":["estimate"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["std.error"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["statistic"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["p.value"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"(Intercept)","2":"-29.023316951","3":"1.701532e+04","4":"-1.705717e-03","5":"0.9986390"},{"1":"id","2":"0.134507907","3":"1.166950e-01","4":"1.152645e+00","5":"0.2490563"},{"1":"weight","2":"-1.137721760","3":"1.825078e+00","4":"-6.233824e-01","5":"0.5330333"},{"1":"price","2":"0.001880983","3":"1.411812e-03","4":"1.332319e+00","5":"0.1827554"},{"1":"shimano_dura_ace","2":"19.565947334","3":"6.053975e+04","4":"3.231917e-04","5":"0.9997421"},{"1":"shimano_ultegra","2":"2.396064377","3":"5.943095e+04","4":"4.031678e-05","5":"0.9999678"},{"1":"shimano_105","2":"2.506642984","3":"5.943095e+04","4":"4.217740e-05","5":"0.9999663"},{"1":"shimano_tiagra","2":"-17.941008000","3":"6.552845e+04","4":"-2.737896e-04","5":"0.9997815"},{"1":"shimano_deore","2":"1.922918170","3":"2.576060e+04","4":"7.464570e-05","5":"0.9999404"},{"1":"shimano_slx","2":"-39.250675957","3":"3.485534e+04","4":"-1.126102e-03","5":"0.9991015"},{"1":"shimano_grx","2":"1.356695687","3":"4.925643e+04","4":"2.754353e-05","5":"0.9999780"},{"1":"Shimano_xt","2":"-0.277779917","3":"2.612695e+04","4":"-1.063193e-05","5":"0.9999915"},{"1":"Shimano_saint","2":"67.796755966","3":"5.666332e+04","4":"1.196484e-03","5":"0.9990453"},{"1":"SRAM_red","2":"10.917273266","3":"6.150254e+04","4":"1.775093e-04","5":"0.9998584"},{"1":"SRAM_force","2":"18.318717578","3":"5.745317e+04","4":"3.188461e-04","5":"0.9997456"},{"1":"SRAM_rival","2":"5.422865594","3":"7.868844e+04","4":"6.891566e-05","5":"0.9999450"},{"1":"SRAM_apex","2":"-37.243665378","3":"6.874562e+04","4":"-5.417606e-04","5":"0.9995677"},{"1":"SRAM_xx1","2":"-39.864640066","3":"2.555867e+04","4":"-1.559730e-03","5":"0.9987555"},{"1":"SRAM_x01","2":"20.279129211","3":"1.016503e+04","4":"1.994989e-03","5":"0.9984082"},{"1":"SRAM_gx","2":"2.118640328","3":"1.860275e+00","4":"1.138886e+00","5":"0.2547508"},{"1":"SRAM_nx","2":"-35.956273502","3":"1.267110e+04","4":"-2.837659e-03","5":"0.9977359"},{"1":"SRAM_sx","2":"-18.694724455","3":"3.011240e+04","4":"-6.208315e-04","5":"0.9995046"},{"1":"Campagnolo_super_record","2":"-6.596236853","3":"6.803235e+04","4":"-9.695735e-05","5":"0.9999226"},{"1":"shimano_nexus","2":"-40.019173863","3":"6.792720e+04","4":"-5.891480e-04","5":"0.9995299"},{"1":"shimano_alfine","2":"-41.149187799","3":"6.520903e+04","4":"-6.310351e-04","5":"0.9994965"},{"1":"category_1_Gravel","2":"74.722516220","3":"6.400214e+04","4":"1.167500e-03","5":"0.9990685"},{"1":"category_1_Hybrid...City","2":"-11.499323944","3":"2.625874e+04","4":"-4.379236e-04","5":"0.9996506"},{"1":"category_1_Mountain","2":"36.065532436","3":"1.884100e+04","4":"1.914205e-03","5":"0.9984727"},{"1":"category_1_Road","2":"46.235831325","3":"6.327176e+04","4":"7.307498e-04","5":"0.9994169"},{"1":"category_2_All.Road","2":"-16.622055454","3":"4.819614e+04","4":"-3.448835e-04","5":"0.9997248"},{"1":"category_2_City","2":"14.836868954","3":"6.498541e+04","4":"2.283108e-04","5":"0.9998178"},{"1":"category_2_Cross.Country","2":"40.166846810","3":"1.823329e+04","4":"2.202940e-03","5":"0.9982423"},{"1":"category_2_Cyclocross","2":"-0.133794202","3":"2.277553e+04","4":"-5.874472e-06","5":"0.9999953"},{"1":"category_2_Dirt.Jump","2":"-42.225238614","3":"3.464046e+04","4":"-1.218957e-03","5":"0.9990274"},{"1":"category_2_Downhill","2":"-63.055982695","3":"3.087603e+04","4":"-2.042231e-03","5":"0.9983705"},{"1":"category_2_E.City","2":"40.810241513","3":"3.224492e+04","4":"1.265633e-03","5":"0.9989902"},{"1":"category_2_E.Fitness","2":"-10.635789768","3":"3.740431e+04","4":"-2.843467e-04","5":"0.9997731"},{"1":"category_2_E.Gravel","2":"45.701281802","3":"5.673805e+04","4":"8.054786e-04","5":"0.9993573"},{"1":"category_2_E.Mountain","2":"44.826707997","3":"3.506102e+04","4":"1.278534e-03","5":"0.9989799"},{"1":"category_2_E.Trekking","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_2_Endurance","2":"-16.558142472","3":"1.348183e+04","4":"-1.228182e-03","5":"0.9990201"},{"1":"category_2_Enduro","2":"-1.740130599","3":"2.256610e+04","4":"-7.711259e-05","5":"0.9999385"},{"1":"category_2_Fat.Bikes","2":"51.375261619","3":"3.095735e+04","4":"1.659550e-03","5":"0.9986759"},{"1":"category_2_Race","2":"2.301864630","3":"1.949098e+04","4":"1.180990e-04","5":"0.9999058"},{"1":"category_2_Touring","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_2_Trail","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_2_Triathlon.Bike","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Commuter","2":"25.661775071","3":"8.408210e+04","4":"3.051990e-04","5":"0.9997565"},{"1":"category_3_Commuter.ON","2":"-45.898115985","3":"4.356945e+04","4":"-1.053447e-03","5":"0.9991595"},{"1":"category_3_Dude","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Endurace","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Exceed","2":"7.546805530","3":"1.900103e+04","4":"3.971787e-04","5":"0.9996831"},{"1":"category_3_Grail","2":"-38.289584130","3":"9.249767e+04","4":"-4.139519e-04","5":"0.9996697"},{"1":"category_3_Grail.ON","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Grand.Canyon","2":"-32.610247948","3":"2.140785e+04","4":"-1.523284e-03","5":"0.9987846"},{"1":"category_3_Grand.Canyon.ON","2":"-38.127079125","3":"5.255197e+04","4":"-7.255119e-04","5":"0.9994211"},{"1":"category_3_Inflite","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Lux","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Neuron","2":"-17.228426369","3":"8.091039e+03","4":"-2.129322e-03","5":"0.9983010"},{"1":"category_3_Neuron.ON","2":"-39.960469220","3":"4.132466e+04","4":"-9.669884e-04","5":"0.9992285"},{"1":"category_3_Pathlite","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Pathlite.ON","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Precede.ON","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Roadlite","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Roadlite.ON","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Sender","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Spectral","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Spectral.ON","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Speedmax","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Stitched","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Strive","2":"-23.082778382","3":"2.106571e+04","4":"-1.095751e-03","5":"0.9991257"},{"1":"category_3_Torque","2":"NA","3":"NA","4":"NA","5":"NA"},{"1":"category_3_Ultimate","2":"-6.063356916","3":"1.685194e+04","4":"-3.598018e-04","5":"0.9997129"},{"1":"gender_unisex","2":"0.486621599","3":"1.107984e+00","4":"4.391954e-01","5":"0.6605200"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code># Get predictions
+
+bike_predict &lt;- predict(bike_fit, test_data, type=&quot;prob&quot;) %&gt;% 
+  bind_cols(test_data %&gt;% select(frame_material, category_2)) 
+
+bike_predict %&gt;% 
+  roc_curve(truth = frame_material, .pred_aluminium) %&gt;% 
+  autoplot()</code></pre>
+<p><img src="02_ml_sup_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code>bike_predict %&gt;% 
+  roc_curve(truth = frame_material, .pred_carbon) %&gt;% 
+  autoplot()</code></pre>
+<p><img src="02_ml_sup_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+<pre class="r"><code>bike_predict</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[".pred_aluminium"],"name":[1],"type":["dbl"],"align":["right"]},{"label":[".pred_carbon"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["frame_material"],"name":[3],"type":["fct"],"align":["left"]},{"label":["category_2"],"name":[4],"type":["chr"],"align":["left"]}],"data":[{"1":"1.695437e-10","2":"1.000000e+00","3":"carbon","4":"Race"},{"1":"2.319007e-09","2":"1.000000e+00","3":"carbon","4":"Race"},{"1":"6.733125e-10","2":"1.000000e+00","3":"carbon","4":"Race"},{"1":"8.899509e-01","2":"1.100491e-01","3":"aluminium","4":"Endurance"},{"1":"1.000000e+00","2":"9.402939e-11","3":"aluminium","4":"Endurance"},{"1":"5.593304e-13","2":"1.000000e+00","3":"carbon","4":"Endurance"},{"1":"2.934978e-01","2":"7.065022e-01","3":"carbon","4":"Endurance"},{"1":"6.727544e-02","2":"9.327246e-01","3":"carbon","4":"Endurance"},{"1":"7.395268e-02","2":"9.260473e-01","3":"carbon","4":"Endurance"},{"1":"1.515485e-01","2":"8.484515e-01","3":"carbon","4":"Endurance"},{"1":"1.071427e-02","2":"9.892857e-01","3":"carbon","4":"Endurance"},{"1":"NA","2":"NA","3":"aluminium","4":"E-Road"},{"1":"2.220446e-16","2":"1.000000e+00","3":"carbon","4":"Cyclocross"},{"1":"2.220446e-16","2":"1.000000e+00","3":"carbon","4":"Cyclocross"},{"1":"7.005295e-10","2":"1.000000e+00","3":"carbon","4":"Triathlon Bike"},{"1":"3.044557e-10","2":"1.000000e+00","3":"carbon","4":"Triathlon Bike"},{"1":"2.220446e-16","2":"1.000000e+00","3":"carbon","4":"Triathlon Bike"},{"1":"4.091105e-11","2":"1.000000e+00","3":"carbon","4":"Triathlon Bike"},{"1":"5.130119e-12","2":"1.000000e+00","3":"carbon","4":"Triathlon Bike"},{"1":"2.364732e-10","2":"1.000000e+00","3":"carbon","4":"Triathlon Bike"},{"1":"8.364420e-13","2":"1.000000e+00","3":"carbon","4":"Triathlon Bike"},{"1":"3.993472e-11","2":"1.000000e+00","3":"carbon","4":"Race"},{"1":"2.220446e-16","2":"1.000000e+00","3":"carbon","4":"Cross-Country"},{"1":"2.220446e-16","2":"1.000000e+00","3":"carbon","4":"Cross-Country"},{"1":"2.088245e-09","2":"1.000000e+00","3":"carbon","4":"All-Road"},{"1":"1.539961e-01","2":"8.460039e-01","3":"carbon","4":"All-Road"},{"1":"7.390003e-01","2":"2.609997e-01","3":"aluminium","4":"All-Road"},{"1":"7.861503e-01","2":"2.138497e-01","3":"aluminium","4":"All-Road"},{"1":"1.000000e+00","2":"2.220446e-16","3":"aluminium","4":"Trail"},{"1":"1.000000e+00","2":"1.126305e-09","3":"aluminium","4":"Trail"},{"1":"1.000000e+00","2":"3.877874e-11","3":"aluminium","4":"E-Mountain"},{"1":"2.220446e-16","2":"1.000000e+00","3":"carbon","4":"Cross-Country"},{"1":"1.000000e+00","2":"8.473233e-10","3":"aluminium","4":"E-Mountain"},{"1":"2.220446e-16","2":"1.000000e+00","3":"carbon","4":"Trail"},{"1":"4.971767e-11","2":"1.000000e+00","3":"carbon","4":"E-Mountain"},{"1":"4.737799e-10","2":"1.000000e+00","3":"carbon","4":"E-Mountain"},{"1":"1.000000e+00","2":"3.360063e-10","3":"aluminium","4":"Dirt Jump"},{"1":"9.309337e-01","2":"6.906633e-02","3":"carbon","4":"Enduro"},{"1":"1.977275e-09","2":"1.000000e+00","3":"aluminium","4":"Enduro"},{"1":"8.116298e-01","2":"1.883702e-01","3":"aluminium","4":"Enduro"},{"1":"3.882098e-10","2":"1.000000e+00","3":"carbon","4":"E-City"},{"1":"1.000000e+00","2":"6.427070e-11","3":"aluminium","4":"E-Fitness"},{"1":"2.061490e-08","2":"1.000000e+00","3":"aluminium","4":"City"},{"1":"1.000000e+00","2":"2.220446e-16","3":"aluminium","4":"City"},{"1":"6.847078e-01","2":"3.152922e-01","3":"aluminium","4":"City"},{"1":"1.874701e-01","2":"8.125299e-01","3":"carbon","4":"City"},{"1":"2.843217e-01","2":"7.156783e-01","3":"carbon","4":"City"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>roc_al &lt;- bike_predict %&gt;% 
+  roc_auc(truth = frame_material, .pred_aluminium)
+roc_al</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[".metric"],"name":[1],"type":["chr"],"align":["left"]},{"label":[".estimator"],"name":[2],"type":["chr"],"align":["left"]},{"label":[".estimate"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"roc_auc","2":"binary","3":"0.9462366"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>roc_car &lt;- bike_predict %&gt;% 
+  roc_auc(truth = frame_material, .pred_carbon)
+roc_car</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[".metric"],"name":[1],"type":["chr"],"align":["left"]},{"label":[".estimator"],"name":[2],"type":["chr"],"align":["left"]},{"label":[".estimate"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"roc_auc","2":"binary","3":"0.05376344"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code># Evaluation
+model_01_linear_lm_simple &lt;- linear_reg(mode = &quot;regression&quot;) %&gt;%
+  set_engine(&quot;lm&quot;) %&gt;%
+  fit(price ~ category_2 + frame_material, data = train_data)
+model_01_linear_lm_simple</code></pre>
+<pre><code>## parsnip model object
+## 
+## 
+## Call:
+## stats::lm(formula = price ~ category_2 + frame_material, data = data)
+## 
+## Coefficients:
+##              (Intercept)        category_2All-Road            category_2City  
+##                   2226.8                    -514.9                   -1177.1  
+##  category_2Cross-Country      category_2Cyclocross       category_2Dirt Jump  
+##                    141.0                    -490.5                    -937.8  
+##       category_2Downhill          category_2E-City       category_2E-Fitness  
+##                   1423.1                     739.9                     727.2  
+##       category_2E-Gravel      category_2E-Mountain      category_2E-Trekking  
+##                   1345.0                    1067.3                    1097.9  
+##      category_2Endurance          category_2Enduro       category_2Fat Bikes  
+##                   -587.1                     661.7                   -1460.0  
+##           category_2Race         category_2Touring           category_2Trail  
+##                    887.1                   -1055.3                    -428.5  
+## category_2Triathlon Bike      frame_materialcarbon  
+##                    506.1                    1617.2</code></pre>
+<pre class="r"><code>test_data &lt;- test_data %&gt;% filter(category_2 != &quot;Fat Bikes&quot;) %&gt;% filter(category_2 != &quot;E-Road&quot;)
+yards &lt;- model_01_linear_lm_simple %&gt;%
+  predict(new_data = test_data) %&gt;%
+  bind_cols(test_data %&gt;% select(price)) %&gt;%
+  yardstick::metrics(truth = price, estimate = .pred)
+yards</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[".metric"],"name":[1],"type":["chr"],"align":["left"]},{"label":[".estimator"],"name":[2],"type":["chr"],"align":["left"]},{"label":[".estimate"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"rmse","2":"standard","3":"1053.4458524"},{"1":"rsq","2":"standard","3":"0.5006732"},{"1":"mae","2":"standard","3":"768.4889104"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>g1 &lt;- bike_features_tbl %&gt;% 
+  mutate(category_2 = as.factor(category_2) %&gt;% 
+           fct_reorder(price)) %&gt;% 
+  
+  ggplot(aes(category_2, price)) +
+  geom_violin() +
+  geom_jitter(width = 0.2, alpha = 0.5, color = &quot;#2dc6d6&quot;) +
+  coord_flip() +
+  facet_wrap(~ frame_material) +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  labs( title = &quot;Price for Each Model&quot;, y = &quot;&quot;, x = &quot;Category 2&quot;)
+g1</code></pre>
+<p><img src="02_ml_sup_files/figure-html/unnamed-chunk-5-3.png" width="672" /></p>
+<pre class="r"><code>new_trail &lt;- tibble(
+  model = &quot;Exceed AL SL new&quot;,
+  category_2 = &quot;Trail&quot;,
+  frame_material = &quot;aluminium&quot;,
+  shimano_dura_ace = 0,
+  shimano_ultegra = 0,
+  shimano_105 = 0,
+  shimano_tiagra = 0,
+  Shimano_sora = 0,
+  shimano_deore = 0,
+  shimano_slx = 0,
+  shimano_grx = 0,
+  Shimano_xt = 1,
+  Shimano_xtr = 0,
+  Shimano_saint = 0,
+  SRAM_red = 0,
+  SRAM_force = 0,
+  SRAM_rival = 0,
+  SRAM_apex = 0,
+  SRAM_xx1 = 0,
+  SRAM_x01 = 0,
+  SRAM_gx = 0,
+  SRAM_nx = 0,
+  SRAM_sx = 0,
+  Campagnolo_potenza = 0,
+  Campagnolo_super_record = 0,
+  shimano_nexus = 0,
+  shimano_alfine = 0
+) 
+new_trail</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["model"],"name":[1],"type":["chr"],"align":["left"]},{"label":["category_2"],"name":[2],"type":["chr"],"align":["left"]},{"label":["frame_material"],"name":[3],"type":["chr"],"align":["left"]},{"label":["shimano_dura_ace"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["shimano_ultegra"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["shimano_105"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["shimano_tiagra"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["Shimano_sora"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["shimano_deore"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["shimano_slx"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["shimano_grx"],"name":[11],"type":["dbl"],"align":["right"]},{"label":["Shimano_xt"],"name":[12],"type":["dbl"],"align":["right"]},{"label":["Shimano_xtr"],"name":[13],"type":["dbl"],"align":["right"]},{"label":["Shimano_saint"],"name":[14],"type":["dbl"],"align":["right"]},{"label":["SRAM_red"],"name":[15],"type":["dbl"],"align":["right"]},{"label":["SRAM_force"],"name":[16],"type":["dbl"],"align":["right"]},{"label":["SRAM_rival"],"name":[17],"type":["dbl"],"align":["right"]},{"label":["SRAM_apex"],"name":[18],"type":["dbl"],"align":["right"]},{"label":["SRAM_xx1"],"name":[19],"type":["dbl"],"align":["right"]},{"label":["SRAM_x01"],"name":[20],"type":["dbl"],"align":["right"]},{"label":["SRAM_gx"],"name":[21],"type":["dbl"],"align":["right"]},{"label":["SRAM_nx"],"name":[22],"type":["dbl"],"align":["right"]},{"label":["SRAM_sx"],"name":[23],"type":["dbl"],"align":["right"]},{"label":["Campagnolo_potenza"],"name":[24],"type":["dbl"],"align":["right"]},{"label":["Campagnolo_super_record"],"name":[25],"type":["dbl"],"align":["right"]},{"label":["shimano_nexus"],"name":[26],"type":["dbl"],"align":["right"]},{"label":["shimano_alfine"],"name":[27],"type":["dbl"],"align":["right"]}],"data":[{"1":"Exceed AL SL new","2":"Trail","3":"aluminium","4":"0","5":"0","6":"0","7":"0","8":"0","9":"0","10":"0","11":"0","12":"1","13":"0","14":"0","15":"0","16":"0","17":"0","18":"0","19":"0","20":"0","21":"0","22":"0","23":"0","24":"0","25":"0","26":"0","27":"0"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>predict(model_01_linear_lm_simple, new_data = new_trail)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[".pred"],"name":[1],"type":["dbl"],"align":["right"]}],"data":[{"1":"1798.388"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>models_tbl &lt;- tibble(
+  model_id = str_c(&quot;Model 0&quot;, 1:1),
+  model = list(
+    model_01_linear_lm_simple
+  )
+)
+models_tbl</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["model_id"],"name":[1],"type":["chr"],"align":["left"]},{"label":["model"],"name":[2],"type":["list"],"align":["right"]}],"data":[{"1":"Model 01","2":"<S3: _lm>"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>predictions_new_trail &lt;- models_tbl %&gt;%
+  mutate(predictions = map(model, predict, new_data = new_trail)) %&gt;%
+  unnest(predictions) %&gt;%
+  mutate(category_2 = &quot;Trail&quot;) %&gt;%
+  left_join(new_trail, by = &quot;category_2&quot;)
+predictions_new_trail</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["model_id"],"name":[1],"type":["chr"],"align":["left"]},{"label":["model.x"],"name":[2],"type":["list"],"align":["right"]},{"label":[".pred"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["category_2"],"name":[4],"type":["chr"],"align":["left"]},{"label":["model.y"],"name":[5],"type":["chr"],"align":["left"]},{"label":["frame_material"],"name":[6],"type":["chr"],"align":["left"]},{"label":["shimano_dura_ace"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["shimano_ultegra"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["shimano_105"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["shimano_tiagra"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["Shimano_sora"],"name":[11],"type":["dbl"],"align":["right"]},{"label":["shimano_deore"],"name":[12],"type":["dbl"],"align":["right"]},{"label":["shimano_slx"],"name":[13],"type":["dbl"],"align":["right"]},{"label":["shimano_grx"],"name":[14],"type":["dbl"],"align":["right"]},{"label":["Shimano_xt"],"name":[15],"type":["dbl"],"align":["right"]},{"label":["Shimano_xtr"],"name":[16],"type":["dbl"],"align":["right"]},{"label":["Shimano_saint"],"name":[17],"type":["dbl"],"align":["right"]},{"label":["SRAM_red"],"name":[18],"type":["dbl"],"align":["right"]},{"label":["SRAM_force"],"name":[19],"type":["dbl"],"align":["right"]},{"label":["SRAM_rival"],"name":[20],"type":["dbl"],"align":["right"]},{"label":["SRAM_apex"],"name":[21],"type":["dbl"],"align":["right"]},{"label":["SRAM_xx1"],"name":[22],"type":["dbl"],"align":["right"]},{"label":["SRAM_x01"],"name":[23],"type":["dbl"],"align":["right"]},{"label":["SRAM_gx"],"name":[24],"type":["dbl"],"align":["right"]},{"label":["SRAM_nx"],"name":[25],"type":["dbl"],"align":["right"]},{"label":["SRAM_sx"],"name":[26],"type":["dbl"],"align":["right"]},{"label":["Campagnolo_potenza"],"name":[27],"type":["dbl"],"align":["right"]},{"label":["Campagnolo_super_record"],"name":[28],"type":["dbl"],"align":["right"]},{"label":["shimano_nexus"],"name":[29],"type":["dbl"],"align":["right"]},{"label":["shimano_alfine"],"name":[30],"type":["dbl"],"align":["right"]}],"data":[{"1":"Model 01","2":"<S3: _lm>","3":"1798.388","4":"Trail","5":"Exceed AL SL new","6":"aluminium","7":"0","8":"0","9":"0","10":"0","11":"0","12":"0","13":"0","14":"0","15":"1","16":"0","17":"0","18":"0","19":"0","20":"0","21":"0","22":"0","23":"0","24":"0","25":"0","26":"0","27":"0","28":"0","29":"0","30":"0"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>g2 &lt;- g1 +
+  geom_point(aes(y = .pred), color = &quot;red&quot;, alpha = 0.5,
+             data = predictions_new_trail) +
+  ggrepel::geom_text_repel(aes(label = model_id, y = .pred),
+                           size = 5,
+                           data = predictions_new_trail)
+g2</code></pre>
+<p><img src="02_ml_sup_files/figure-html/unnamed-chunk-5-4.png" width="672" /></p>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
